@@ -108,11 +108,11 @@ class mingw (
     require => Exec['install_pip','install-mingw'],
   }
 
-  $cygwincompiler_py = "${python_installdir}\\Lib\\distutils\\cygwinccompiler.py"
+  $cygwinccompiler_py = "${python_installdir}\\Lib\\distutils\\cygwinccompiler.py"
   
-  file { $cygwincompiler_py:
+  file { $cygwinccompiler_py:
     ensure  => file,  
-    source => "puppet:///modules/mingw/cygwincompiler.py",
+    source => "puppet:///modules/mingw/cygwinccompiler.py",
     require => Exec['install_pip','install-mingw'],
   }
 
