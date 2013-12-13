@@ -9,18 +9,26 @@ class mingw (
   $mgw_path_base   = $mingw::params::mgw_path_base,
 ) inherits mingw::params {
 
+  file {"${mgw_get_path}":
+     ensure   => "directory",
+  }
   
   windows_common::remote_file{"mingw-get":
-    source      => "http://downloads.sourceforge.net/project/mingw/Installer/mingw-get/mingw-get-${mgw_get_version}/mingw-get-${mgw_get_version}-bin.zip",
-    destination => "${mgw_get_path}\\mingw-get.zip",
+    source      => "http://downloads.sourceforge.net/project/mingw/Installer/mingw-get/mingw-get-${mgw_get_version}-${mgw_get_build}/mingw-get-${mgw_get_version}-mingw32-${mgw_get_build}-bin.zip",
+    #source       => "http://sourceforge.net/projects/mingw/files/Installer/mingw-get/mingw-get-${mgw_get_version}-${mgw_get_build}/mingw-get-${mgw_get_version}-mingw32-${mgw_get_build}-bin.zip/download",
+	destination => "${mgw_get_path}\\mingw-get.zip",
+	before       => Windows_7zip::Extract_file['mingw-get'],
+	require      => File["${mgw_get_path}"],
   }
   
-  windows_7zip::extract_file{'':
+  windows_7zip::extract_file{'mingw-get':
     file        => "${mgw_get_path}\\mingw-get.zip",
     destination => $mgw_get_path,
+	before      => Exec['install-mingw'],
+	subscribe   => Windows_common::Remote_file["mingw-get"],
   }
 
-#  Package { provider => chocolatey }
+#  Package { provider => 'chocolatey' }
 #
 #  package {'python.x86':
 #    ensure => installed,
@@ -43,25 +51,30 @@ class mingw (
   package {
     $python_package: 
       ensure => installed,
-      provider => chocolatey;
+      provider => 'chocolatey';
     'easy.install':
       ensure => installed,
-      provider => chocolatey;
+      provider => 'chocolatey';
   }
-  exec { 
-    'get_pip_installer':
-      provider  => powershell,
-      unless    => '[IO.File]::Exists("$env:temp\get-pip.py")',
-      command   => '(New-Object Net.WebClient).DownloadFile("https://raw.github.com/pypa/pip/master/contrib/get-pip.py", "$env:temp\get-pip.py")';
+  
+  windows_common::remote_file{"get_pip_installer":
+    source      => "https://raw.github.com/pypa/pip/master/contrib/get-pip.py",
+	destination => "C:\\get-pip.py",
+	#require      => File["${mgw_get_path}"],
+  }
+  
+  exec {
     'install_pip':
-      command   => 'cmd.exe /c python %temp%\get-pip.py',
-      require   => [Package[$python_package,'easy.install'], Exec['get_pip_installer']];
+      command   => 'python "C:\\get-pip.py"',
+      require   => [Package[$python_package,'easy.install'], Windows_common::Remote_file['get_pip_installer']],
+	  provider  => powershell;
     'install-mingw':
-      command   => "cmd.exe /c set \"mingw=${mgw_path_base}\" ; ${mgw_get_path}\\bin\\mingw-get.exe install mingw32-base",
+      command   => "set \"mingw=${mgw_path_base}\" ; ${mgw_get_path}\\bin\\mingw-get.exe install mingw32-base",
+	  provider  => powershell,
   }
   
   
-  $mingw_path = "${mgw_path_base}\bin"  
+  $mingw_path = "${mgw_get_path}\\bin"
 
   windows_path { $mingw_path:
     ensure => present,
@@ -96,10 +109,10 @@ class mingw (
   }
 
   $cygwincompiler_py = "${python_installdir}\\Lib\\distutils\\cygwinccompiler.py"
-
-  file { $cygwinccompiler_py:
+  
+  file { $cygwincompiler_py:
     ensure  => file,  
-    source => 'puppet:///modules/mingw/cygwincompiler.py',
+    source => "puppet:///modules/mingw/cygwincompiler.py",
     require => Exec['install_pip','install-mingw'],
   }
 
