@@ -73,12 +73,24 @@ class mingw (
 	  provider  => powershell,
   }
   
+  mingw::dependency{ 'msys':
+    remote_url => undef,
+    source     => undef,
+    version    => undef,
+  }
   
   $mingw_path = "${mgw_get_path}\\bin"
 
   windows_path { $mingw_path:
     ensure => present,
     require => Exec['install-mingw'],
+  }
+  
+  $msys_path = "${mgw_get_path}\\msys\\1.0\\bin"
+  
+  windows_path { $msys_path:
+    ensure => present,
+    require => Mingw::Dependency['msys'],
   }
   
 #  $git_path = 'C:\Program Files\Git\cmd'
