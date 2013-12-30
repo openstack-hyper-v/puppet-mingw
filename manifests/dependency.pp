@@ -50,4 +50,8 @@ define mingw::dependency (
           }
         }
    }
+   exec { "mingw-iget-dependency-${name}":
+      command  => "& mingw-get install '${source_real}'",
+      provider => powershell,
+   }
 }
