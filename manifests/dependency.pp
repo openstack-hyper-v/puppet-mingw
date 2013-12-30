@@ -46,11 +46,11 @@ define mingw::dependency (
         windows_common::remote_file{ $source_real:
           source      => $remote_url,
           destination => $source_real,
-          before      => Exec["mingw-iget-dependency-${name}"],
+          before      => Exec["mingw-get-dependency-${name}"],
           }
         }
    }
-   exec { "mingw-iget-dependency-${name}":
+   exec { "mingw-get-dependency-${name}":
       command  => "& mingw-get install '${source_real}'",
       provider => powershell,
    }
