@@ -30,7 +30,7 @@ class mingw (
   exec {'install-mingw':
       command   => "set \"mingw=${mgw_path_base}\" ; ${mgw_get_path}\\bin\\mingw-get.exe install mingw32-base",
       provider  => powershell,
-      before    => Mingw::Dependency['msys'],
+      before    => [Mingw::Dependency['msys'],Mingw::Dependency['gcc'],Mingw::Dependency['g++'],Mingw::Dependency['mingw32-make'],Mingw::Dependency['libtool']],
   }
 
   mingw::dependency{ 'msys':
@@ -54,6 +54,30 @@ class mingw (
     ensure     => present,
     require    => Mingw::Dependency['msys'],
     notify     => Reboot['after_run'],
+  }
+
+  mingw::dependency{ 'gcc':
+    remote_url => undef,
+    source     => undef,
+    version    => undef,
+  }
+
+  mingw::dependency{ 'g++':
+    remote_url => undef,
+    source     => undef,
+    version    => undef,
+  }
+
+  mingw::dependency{ 'mingw32-make':
+    remote_url => undef,
+    source     => undef,
+    version    => undef,
+  }
+
+  mingw::dependency{ 'libtool':
+    remote_url => undef,
+    source     => undef,
+    version    => undef,
   }
 
   reboot { 'after_run':
