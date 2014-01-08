@@ -27,28 +27,7 @@ class mingw (
     subscribe    => Windows_common::Remote_file["mingw-get"],
   }
 
-  $python_package = 'python.x86'
-
-  package {
-    $python_package:
-      ensure     => installed,
-      provider   => 'chocolatey';
-    'easy.install':
-      ensure     => installed,
-      provider   => 'chocolatey';
-  }
-
-  windows_common::remote_file{"get_pip_installer":
-    source       => "https://raw.github.com/pypa/pip/master/contrib/get-pip.py",
-    destination  => "C:\\get-pip.py",
-  }
-
-  exec {
-    'install_pip':
-      command   => 'python "C:\\get-pip.py"',
-      require   => [Package[$python_package,'easy.install'], Windows_common::Remote_file['get_pip_installer']],
-      provider  => powershell;
-    'install-mingw':
+  exec {'install-mingw':
       command   => "set \"mingw=${mgw_path_base}\" ; ${mgw_get_path}\\bin\\mingw-get.exe install mingw32-base",
       provider  => powershell,
       before    => Mingw::Dependency['msys'],
@@ -73,34 +52,21 @@ class mingw (
 
   windows_path { $msys_path:
     ensure     => present,
-    require    =>  Mingw::Dependency['msys'],
+    require    => Mingw::Dependency['msys'],
     notify     => Reboot['after_run'],
   }
 
   reboot { 'after_run':
     apply      => finished,
   }
-
   $python_installdir  = 'C:\Python27'
-
-  windows_path { $python_installdir:
-    ensure     => present,
-    require    => Package[$python_package],
-    notify     => Reboot['after_run'],
-  }
-
-  windows_path { "${python_installdir}\\Scripts":
-    ensure     => present,
-    require    => Package[$python_package],
-    notify     => Reboot['after_run'],
-  }
 
   $distutils_cfg = "${python_installdir}\\Lib\\distutils\\distutils.cfg"
 
   file { $distutils_cfg:
     ensure     => file,
     source     => 'puppet:///modules/mingw/distutils.cfg',
-    require    => Exec['install_pip','install-mingw'],
+    require    => Exec['install-mingw'],
   }
 
   $cygwinccompiler_py = "${python_installdir}\\Lib\\distutils\\cygwinccompiler.py"
@@ -108,7 +74,6 @@ class mingw (
   file { $cygwinccompiler_py:
     ensure     => file,
     source     => "puppet:///modules/mingw/cygwinccompiler.py",
-    require    => Exec['install_pip','install-mingw'],
+    require    => Exec['install-mingw'],
   }
 }
-
