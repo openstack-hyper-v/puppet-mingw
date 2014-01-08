@@ -44,7 +44,7 @@ class mingw (
   windows_path { $mingw_path:
     ensure     => present,
     require    => Exec['install-mingw'],
-    before     => Mingw::Dependency['msys'],
+    before     => [Mingw::Dependency['msys'],Mingw::Dependency['gcc'],Mingw::Dependency['g++'],Mingw::Dependency['mingw32-make'],Mingw::Dependency['libtool']],
     notify     => Reboot['after_run'],
   }
 
