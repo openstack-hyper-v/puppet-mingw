@@ -45,7 +45,7 @@ class mingw (
     ensure     => present,
     require    => Exec['install-mingw'],
     before     => [Mingw::Dependency['msys'],Mingw::Dependency['gcc'],Mingw::Dependency['g++'],Mingw::Dependency['mingw32-make'],Mingw::Dependency['libtool']],
-    notify     => Reboot['after_path_update'],
+    #notify     => Reboot['after_path_update'],
   }
 
   $msys_path = "${mgw_get_path}\\msys\\1.0\\bin"
@@ -53,7 +53,7 @@ class mingw (
   windows_path { $msys_path:
     ensure     => present,
     require    => Mingw::Dependency['msys'],
-    notify     => Reboot['after_path_update'],
+    #notify     => Reboot['after_path_update'],
   }
 
   mingw::dependency{ 'gcc':
@@ -80,9 +80,9 @@ class mingw (
     version    => undef,
   }
 
-  reboot { 'after_path_update':
-    timeout        => 5,
-  }
+  #reboot { 'after_path_update':
+  #  timeout        => 5,
+  #}
   
   $python_installdir  = 'C:\Python27'
 
