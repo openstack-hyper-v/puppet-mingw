@@ -91,6 +91,7 @@ class mingw (
   file { $distutils_cfg:
     ensure     => file,
     source     => 'puppet:///modules/mingw/distutils.cfg',
+    source_permissions => ignore,
     require    => Exec['install-mingw'],
   }
 
@@ -99,6 +100,7 @@ class mingw (
   file { $cygwinccompiler_py:
     ensure     => file,
     source     => "puppet:///modules/mingw/cygwinccompiler.py",
+    source_permissions => ignore,
     require    => Exec['install-mingw'],
   }
 }
