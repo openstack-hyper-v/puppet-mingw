@@ -9,28 +9,28 @@ class mingw (
   $mgw_path_base   = $mingw::params::mgw_path_base,
 ) inherits mingw::params {
 
-  file {"${mgw_get_path}":
-     ensure      => "directory",
+  file {$mgw_get_path:
+    ensure => directory,
   }
 
-  windows_common::remote_file{"mingw-get":
-    source       => "http://downloads.sourceforge.net/project/mingw/Installer/mingw-get/mingw-get-${mgw_get_version}-${mgw_get_build}/mingw-get-${mgw_get_version}-mingw32-${mgw_get_build}-bin.zip",
-    destination  => "${mgw_get_path}\\mingw-get.zip",
-    before       => Windows_7zip::Extract_file['mingw-get'],
-    require      => File["${mgw_get_path}"],
+  windows_common::remote_file{ 'mingw-get':
+    source      => "http://downloads.sourceforge.net/project/mingw/Installer/mingw-get/mingw-get-${::mgw_get_version}-${::mgw_get_build}/mingw-get-${::mgw_get_version}-mingw32-${::mgw_get_build}-bin.zip",
+    destination => "${::mgw_get_path}\\mingw-get.zip",
+    before      => Windows_7zip::Extract_file['mingw-get'],
+    require     => File[$mgw_get_path],
   }
 
   windows_7zip::extract_file{'mingw-get':
-    file         => "${mgw_get_path}\\mingw-get.zip",
-    destination  => $mgw_get_path,
-    before       => Exec['install-mingw'],
-    subscribe    => Windows_common::Remote_file["mingw-get"],
+    file        => "${mgw_get_path}\\mingw-get.zip",
+    destination => $mgw_get_path,
+    before      => Exec['install-mingw'],
+    subscribe   => Windows_common::Remote_file['mingw-get'],
   }
 
   exec {'install-mingw':
-      command   => "set \"mingw=${mgw_path_base}\" ; ${mgw_get_path}\\bin\\mingw-get.exe install mingw32-base",
-      provider  => powershell,
-      before    => [Mingw::Dependency['msys'],Mingw::Dependency['gcc'],Mingw::Dependency['g++'],Mingw::Dependency['mingw32-make'],Mingw::Dependency['libtool']],
+      command  => "set \"mingw=${::mgw_path_base}\" ; ${::mgw_get_path}\\bin\\mingw-get.exe install mingw32-base",
+      provider => powershell,
+      before   => [Mingw::Dependency['msys'],Mingw::Dependency['gcc'],Mingw::Dependency['g++'],Mingw::Dependency['mingw32-make'],Mingw::Dependency['libtool']],
   }
 
   mingw::dependency{ 'msys':
@@ -42,18 +42,18 @@ class mingw (
   $mingw_path = "${mgw_get_path}\\bin"
 
   windows_path { $mingw_path:
-    ensure     => present,
-    require    => Exec['install-mingw'],
-    before     => [Mingw::Dependency['msys'],Mingw::Dependency['gcc'],Mingw::Dependency['g++'],Mingw::Dependency['mingw32-make'],Mingw::Dependency['libtool']],
-    #notify     => Reboot['after_path_update'],
+    ensure  => present,
+    require => Exec['install-mingw'],
+    before  => [Mingw::Dependency['msys'],Mingw::Dependency['gcc'],Mingw::Dependency['g++'],Mingw::Dependency['mingw32-make'],Mingw::Dependency['libtool']],
+    #notify => Reboot['after_path_update'],
   }
 
   $msys_path = "${mgw_get_path}\\msys\\1.0\\bin"
 
   windows_path { $msys_path:
-    ensure     => present,
-    require    => Mingw::Dependency['msys'],
-    #notify     => Reboot['after_path_update'],
+    ensure  => present,
+    require => Mingw::Dependency['msys'],
+    #notify => Reboot['after_path_update'],
   }
 
   mingw::dependency{ 'gcc':
@@ -81,26 +81,23 @@ class mingw (
   }
 
   #reboot { 'after_path_update':
-  #  timeout        => 5,
+  #  timeout => 5,
   #}
   
-  $python_installdir  = 'C:\Python27'
+  $python_installdir = 'C:\Python27'
 
   $distutils_cfg = "${python_installdir}\\Lib\\distutils\\distutils.cfg"
-
   file { $distutils_cfg:
-    ensure     => file,
-    source     => 'puppet:///modules/mingw/distutils.cfg',
+    ensure             => file,
+    source             => 'puppet:///modules/mingw/distutils.cfg',
     source_permissions => ignore,
-    require    => Exec['install-mingw'],
+    require            => Exec['install-mingw'],
   }
-
   $cygwinccompiler_py = "${python_installdir}\\Lib\\distutils\\cygwinccompiler.py"
-
   file { $cygwinccompiler_py:
-    ensure     => file,
-    source     => "puppet:///modules/mingw/cygwinccompiler.py",
+    ensure             => file,
+    source             => 'puppet:///modules/mingw/cygwinccompiler.py',
     source_permissions => ignore,
-    require    => Exec['install-mingw'],
+    require            => Exec['install-mingw'],
   }
 }

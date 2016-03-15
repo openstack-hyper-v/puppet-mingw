@@ -34,24 +34,24 @@ define mingw::dependency (
   $source     = undef,
   $version    = latest,
 ){
-   if $source == undef {
-      if $remote_url == undef {
-        if $version != latest {
-         $source_real = "$name==$version"
-           } else {
-               $source_real = $name
-             }
-        } else {
-        $source_real = "${::temp}\\${title}.${type}"
-        windows_common::remote_file{ $source_real:
-          source      => $remote_url,
-          destination => $source_real,
-          before      => Exec["mingw-get-dependency-${name}"],
-          }
-        }
-   }
-   exec { "mingw-get-dependency-${name}":
-      command  => "& mingw-get install '${source_real}'",
-      provider => powershell,
-   }
+if $source == undef {
+  if $remote_url == undef {
+    if $version != latest {
+      $source_real = "${name}==${version}"
+    } else {
+      $source_real = $name
+    }
+  } else {
+    $source_real = "${::temp}\\${title}.${::type}"
+    windows_common::remote_file{ $source_real:
+      source      => $remote_url,
+      destination => $source_real,
+      before      => Exec["mingw-get-dependency-${name}"],
+    }
+  }
+}
+  exec { "mingw-get-dependency-${name}":
+    command  => "& mingw-get install '${source_real}'",
+    provider => powershell,
+  }
 }
